@@ -14,6 +14,7 @@ set -euo pipefail
 
 SWAPFILE="${SWAPFILE:-/swapfile}"
 SWAP_SIZE="${SWAP_SIZE:-1G}"
+INSTALL_BROWSER="${INSTALL_BROWSER:-0}"
 APT_PACKAGES=(nginx curl apache2-utils openssl ca-certificates python3)
 
 log()  { printf '\033[1;34m[setup]\033[0m %s\n' "$*"; }
@@ -94,6 +95,16 @@ log "Cài đặt: ${APT_PACKAGES[*]}"
 "${SUDO[@]}" DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   "${APT_PACKAGES[@]}"
 
+# --- 4b. Browser headless cho demo trên VM (tùy chọn) --------------------
+if [[ "${INSTALL_BROWSER}" == "1" ]]; then
+  log "Cài wkhtmltopdf để chụp ảnh minh chứng (headless, nhẹ)..."
+  if ! "${SUDO[@]}" DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends wkhtmltopdf; then
+    warn "Không cài được wkhtmltopdf; thử chromium-browser (qua snap)..."
+    "${SUDO[@]}" DEBIAN_FRONTEND=noninteractive apt-get install -y chromium-browser \
+      || warn "Không cài được browser headless; xem docs/environment.md mục 7."
+  fi
+fi
+
 # --- 5. Bật / khởi động Nginx -------------------------------------------
 if [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; then
   "${SUDO[@]}" systemctl enable nginx >/dev/null 2>&1 || true
@@ -115,4 +126,5 @@ openssl version 2>&1 || warn "openssl chưa sẵn sàng"
 log "Domain test: $(getent hosts site1.local || echo 'CHƯA resolve')"
 
 log "Hoàn tất thiết lập môi trường."
-log "Bước tiếp theo: bash scripts/01_generate_ssl.sh và bash scripts/02_deploy_config.sh"
+log "Bước tiếp theo (mọi người): bash scripts/02_deploy_config.sh"
+log "Chỉ khi làm Demo 2 (TV3): bash scripts/01_generate_ssl.sh rồi deploy lại."

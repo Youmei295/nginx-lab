@@ -89,6 +89,8 @@ Chi tiết & thứ tự thời gian: [`docs/tasks.md`](docs/tasks.md).
 | [`docs/interfaces.md`](docs/interfaces.md) | **Giao diện chung đã chốt** (domain, cổng, đường dẫn) — đọc trước khi code |
 | [`docs/ai-agents.md`](docs/ai-agents.md) | Quy tắc cho AI agent (và người dùng AI) làm việc trên repo |
 | [`docs/tasks.md`](docs/tasks.md) | Danh sách task theo thứ tự thời gian |
+| [`docs/timeline.md`](docs/timeline.md) | Sơ đồ làm việc song song, phụ thuộc, timeline theo ngày |
+| [`docs/stages/`](docs/stages/README.md) | Tài liệu kỹ thuật giải thích code & nguyên lý từng giai đoạn (Stage 0–5) |
 | [`docs/files.md`](docs/files.md) | Giải thích từng file trong repo |
 | [`docs/environment.md`](docs/environment.md) | Dựng môi trường Ubuntu 22.04, chạy script |
 | [`docs/collaboration.md`](docs/collaboration.md) | Quy tắc làm việc nhóm (branch, PR, review) |

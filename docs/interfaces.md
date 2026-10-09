@@ -27,6 +27,9 @@ Khai báo trong `/etc/hosts` (script `00_setup_vm.sh` tự thêm):
 - Tránh xung đột `server_name` với `app.local` (nếu 2 file cùng khai báo `server_name app.local`, `nginx -t` sẽ lỗi).
 - Chạy trên **HTTP** vì `ab` không hỗ trợ HTTPS, và `app.local` HTTP bị redirect 301 nên không benchmark được.
 
+> **Demo chạy trên VM:** trình duyệt/`curl` chạy ngay trong VM nên chỉ cần `/etc/hosts` nội bộ như trên —
+> **không** cần sửa hosts hay port-forward ở máy host. Xem [`environment.md`](./environment.md) mục 7.
+
 ## 2. Backend mock
 
 - Viết bằng **Python 3 (thư viện chuẩn, không dependency)**, chạy bằng `python3 backend/app.py`.
@@ -112,6 +115,7 @@ curl -k https://app.local/     # sau khi tắt backend
 - `access.log`: `/var/log/nginx/access.log` — cần chứa `$request_time`, `$upstream_response_time` (cấu hình ở `nginx.conf`, Task 0.4).
 - `error.log`: `/var/log/nginx/error.log` — chứa `limiting requests` (503) và `connect() failed ... Connection refused` (502).
 - `scripts/04_collect_logs.sh` trích về `docs/logs/`.
+- ⚠️ Không đặt `access_log` riêng trong `conf.d` nếu muốn giữ `main_ext`; nếu buộc phải đặt, ghi rõ format: `access_log /var/log/nginx/<file>.log main_ext;`.
 
 ## 9. Biến môi trường / sự phụ thuộc
 

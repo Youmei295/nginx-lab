@@ -11,6 +11,8 @@
 - **Bàn giao**: minh chứng cụ thể để tính là hoàn thành.
 - Port backend cố định: `127.0.0.1:3000`. Domain test khai báo trong `/etc/hosts`.
 - **Giao diện chung (domain, cổng, đường dẫn, thông số):** xem [`interfaces.md`](./interfaces.md) — bắt buộc tuân theo.
+- **Sơ đồ làm việc song song & timeline:** xem [`timeline.md`](./timeline.md).
+- **Tài liệu kỹ thuật từng giai đoạn:** xem [`stages/`](./stages/README.md).
 - **Quy trình làm việc (nhánh, commit, PR, review):** xem [`collaboration.md`](./collaboration.md).
 
 ---
