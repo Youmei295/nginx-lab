@@ -32,6 +32,6 @@
 ## Liên hệ
 
 - Phân công & thứ tự: [`../tasks.md`](../tasks.md)
-- Sơ đồ làm việc song song: [`../timeline.md`](../timeline.md)
+- Sơ đồ làm việc song song: [`../tasks.md`](../tasks.md) (mục *"Sơ đồ làm việc & Timeline"*)
 - Giao diện chung: [`../interfaces.md`](../interfaces.md)
 - Vai trò file: [`../files.md`](../files.md)

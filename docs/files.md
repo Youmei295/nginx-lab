@@ -89,12 +89,11 @@
 
 | File | Mục đích | Task / Demo |
 |------|----------|-------------|
-| `docs/tasks.md` | Danh sách task theo thứ tự thời gian, phân công TV1–TV5. | Quản lý chung |
-| `docs/timeline.md` | Sơ đồ làm việc song song, phụ thuộc, đường găng, timeline theo ngày. | Quản lý chung |
+| `docs/tasks.md` | Danh sách task, phân công, sơ đồ làm việc song song & timeline theo ngày. | Quản lý chung |
+| `docs/deliverables.md` | Kỳ vọng từng thành viên theo từng demo (conf.d, scripts, tests, minh chứng) + checklist minh chứng. | Quản lý chung |
 | `docs/stages/` | Tài liệu kỹ thuật theo giai đoạn (`stage-0-infra.md` … `stage-5-*.md`) giải thích code & nguyên lý. | Quản lý chung |
 | `docs/interfaces.md` | Giao diện chung đã chốt: domain, cổng, đường dẫn deploy, error page, cert, thông số rate limit. | Quản lý chung |
 | `docs/ai-agents.md` | Quy tắc cho AI agent: thứ tự đọc, phạm vi file, kiểm chứng, điều cấm, mẫu prompt. | Quản lý chung |
-| `docs/checklist.md` | Checklist minh chứng cần lấy cho từng demo (ảnh, log, output). | Quản lý chung |
 | `docs/collaboration.md` | Quy tắc cộng tác Git: nhánh, commit, PR, review, xử lý conflict, ranh giới file. | Quản lý chung |
 | `docs/environment.md` | Nền tảng chuẩn Ubuntu 22.04, hướng dẫn tạo VM theo từng host (Hyper-V/VirtualBox/VMware/UTM/WSL2) và cách chạy script setup. | Giai đoạn 0 — Task 0.1, 0.2 |
 | `docs/files.md` | Tài liệu này — giải thích từng file. | Quản lý chung |

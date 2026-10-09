@@ -92,4 +92,4 @@
 
 - Danh sách file: `docs/files.md`
 - Giao diện chung: `docs/interfaces.md`
-- Checklist minh chứng: `docs/checklist.md`
+- Checklist minh chứng: `docs/deliverables.md` (mục 7)

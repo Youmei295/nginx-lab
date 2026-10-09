@@ -340,6 +340,6 @@ Sau đó mở **Pull Request** để nhóm review (xem [`collaboration.md`](./co
 - Checklist mục 2 thực hiện **Task 0.1–0.5** trong [`tasks.md`](./tasks.md):
   `00_setup_vm.sh` (0.1–0.3), `nginx/nginx.conf` (0.4), `02_deploy_config.sh` (0.5).
 - Sau khi xong, mở 3 track song song: [Stage 1](./stages/stage-1-vhost.md),
-  [Stage 2](./stages/stage-2-reverse-proxy.md), [Stage 3](./stages/stage-3-rate-limit.md) — xem [`timeline.md`](./timeline.md).
+  [Stage 2](./stages/stage-2-reverse-proxy.md), [Stage 3](./stages/stage-3-rate-limit.md) — xem [`tasks.md`](./tasks.md) mục *"Sơ đồ làm việc & Timeline"*.
 - Giao diện chung: [`interfaces.md`](./interfaces.md). Vai trò file: [`files.md`](./files.md).
 - Chi tiết code & nguyên lý Stage 0: [`stages/stage-0-infra.md`](./stages/stage-0-infra.md).

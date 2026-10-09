@@ -7,7 +7,7 @@
 <!-- TODO: thu log access/error vào docs/logs, viết lý thuyết A, tổng hợp báo cáo/slide -->
 
 ## 2. File liên quan
-<!-- TODO: scripts/04_collect_logs.sh, docs/logs/*.log, docs/report.md, docs/checklist.md -->
+<!-- TODO: scripts/04_collect_logs.sh, docs/logs/*.log, docs/report.md, docs/deliverables.md -->
 
 ## 3. Bức tranh tổng thể
 <!-- TODO: /var/log/nginx -> trích -> docs/logs -> report -->

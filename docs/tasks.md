@@ -11,8 +11,9 @@
 - **Bàn giao**: minh chứng cụ thể để tính là hoàn thành.
 - Port backend cố định: `127.0.0.1:3000`. Domain test khai báo trong `/etc/hosts`.
 - **Giao diện chung (domain, cổng, đường dẫn, thông số):** xem [`interfaces.md`](./interfaces.md) — bắt buộc tuân theo.
-- **Sơ đồ làm việc song song & timeline:** xem [`timeline.md`](./timeline.md).
+- **Sơ đồ làm việc song song & timeline:** xem mục *"Sơ đồ làm việc & Timeline"* ở cuối tài liệu này.
 - **Tài liệu kỹ thuật từng giai đoạn:** xem [`stages/`](./stages/README.md).
+- **Kỳ vọng chi tiết theo demo (conf.d/scripts/tests/minh chứng):** xem [`deliverables.md`](./deliverables.md).
 - **Quy trình làm việc (nhánh, commit, PR, review):** xem [`collaboration.md`](./collaboration.md).
 
 ---
@@ -183,3 +184,83 @@
 | 3 | Rate Limit & Benchmark | TV4 |
 | 4 | Troubleshooting & trang lỗi | TV3, TV5 |
 | 5 | Log, lý thuyết, báo cáo | TV5 + cả nhóm |
+
+---
+
+## Sơ đồ làm việc & Timeline
+
+> Tóm tắt điều phối: **ai làm song song, ai chờ ai, tiến độ theo ngày**.
+
+### Điều phối & phụ thuộc
+
+1. **Giai đoạn 0 là tiên quyết chung** — chưa xong môi trường (swap, nginx, hosts, deploy) thì mọi demo chưa chạy được.
+2. Sau Giai đoạn 0 có **3 track độc lập chạy song song**:
+   - **Track A — Demo 1 (TV2):** thuần Nginx + file tĩnh.
+   - **Track B — Demo 2 (TV3):** backend + cert + reverse proxy.
+   - **Track C — Demo 3 (TV4):** rate limit trên `limit.local`, chỉ cần Nginx.
+3. **TV5** chuẩn bị trang lỗi + khung báo cáo **song song**, nhưng log/ảnh 502 **chờ TV3** xong Demo 2.
+4. **Demo 4 phụ thuộc Demo 2** (phải có proxy mới tắt backend sinh 502).
+5. **TV1** xong hạ tầng thì chuyển sang hỗ trợ deploy + review.
+
+| Công việc | Phụ thuộc vào | Người chờ |
+|-----------|---------------|-----------|
+| Demo 1 (TV2) | Giai đoạn 0 | TV2 |
+| Demo 2 (TV3) | Giai đoạn 0 | TV3 |
+| Demo 3 (TV4) | Giai đoạn 0 | TV4 |
+| Trang lỗi (TV5) | — | TV5 |
+| Demo 4 (TV3+TV5) | **Demo 2** | TV3, TV5 |
+| Thu log (TV5) | Demo 3 + Demo 4 | TV5 |
+| Báo cáo/slide | Tất cả demo | TV5 + nhóm |
+
+**Ai song song với ai:** TV2/TV3/TV4 chạy độc lập sau Giai đoạn 0; TV5 song song có điều kiện; TV1 điều phối.
+**Review chéo:** TV1 ↔ TV2, TV3 ↔ TV4, TV5 review tổng.
+**Dùng VM chung:** chỉ **một người deploy/reload Nginx tại một thời điểm**.
+
+### Timeline theo ngày
+
+| Ngày | TV1 | TV2 | TV3 | TV4 | TV5 |
+|------|-----|-----|-----|-----|-----|
+| **1** | Setup, hosts, `nginx.conf`, deploy (0.1–0.5) | Đọc `interfaces.md`, chuẩn bị HTML | Chuẩn bị `app.py`*, cert | Đọc spec rate limit | Chuẩn bị `custom_50x.html`, khung report |
+| **2** | Hoàn tất deploy, hỗ trợ chung | Demo 1: config + test + ảnh | Demo 2: cert + proxy + HTTPS + test | Demo 3: config rate limit | Viết lý thuyết A (phần mình) |
+| **3** | Review TV2 | **CHỐT Demo 1** + review TV3 | **CHỐT Demo 2**, bắt đầu Demo 4 | Benchmark `ab`, trích log 503 | Viết lý thuyết A (tiếp) |
+| **4** | Hỗ trợ tích hợp | Hỗ trợ tích hợp | **CHỐT Demo 4** (502) | **CHỐT Demo 3**, review TV4 | Trích log 502, chụp ảnh trang lỗi |
+| **5** | Review tổng, dry-run | Dry-run | Dry-run | Dry-run | **CHỐT báo cáo + slide** |
+
+\* `backend/app.py` đã dựng sẵn như scaffolding — TV3 chỉ cần chạy/kiểm chứng và **tập trung vào 2.2–2.4**.
+
+```
+Ngày:      1        2        3        4        5
+TV1   [M0 setup─────][deploy/review────][review──────]
+TV2   [chuẩn bị──────][── Demo 1 ──────][review TV3───]
+TV3   [app*+cert─────][── Demo 2 ──────][Demo 4───────]
+TV4   [đọc spec──────][── Demo 3 ──────][log 503──────]
+TV5   [error+report──][lý thuyết A──────][── Demo 4 ───][report+slide]
+```
+
+### Đường găng (critical path)
+
+```
+M0 (hạ tầng) ──> Demo 2 (TV3) ──> Demo 4 (TV3+TV5) ──> Báo cáo/slide ──> Nộp
+```
+
+- **Trên đường găng:** TV1 (M0) → TV3 (Demo 2, Demo 4) → TV5 (minh chứng, báo cáo).
+- **Không trên đường găng:** Demo 1 (TV2), Demo 3 (TV4) — phải xong trước ngày 5.
+
+### Mốc đồng bộ (milestones)
+
+| Mốc | Khi nào | Điều kiện đạt | Người xác nhận |
+|-----|---------|---------------|----------------|
+| **M0** | Cuối ngày 1 | `nginx -t` pass, hosts resolve, deploy chạy | TV1 |
+| **M1** | Đầu ngày 2 | Cả 3 track khởi động được | Cả nhóm |
+| **M2** | Cuối ngày 2 | Demo 1, 2, 3 có bản chạy thử | TV2/TV3/TV4 |
+| **M3** | Cuối ngày 3 | Demo 2 hoàn tất → mở Demo 4 | TV3 |
+| **M4** | Cuối ngày 4 | Demo 4 (502) + log/ảnh đầy đủ | TV3 + TV5 |
+| **M5** | Cuối ngày 5 | Report + slide + dry-run live | TV5 + cả nhóm |
+
+### Trạng thái hiện tại (scaffolding đã có)
+
+- **TV1:** Giai đoạn 0 đã dựng xong ở mức code — `scripts/00_setup_vm.sh` (0.1–0.3), `nginx/nginx.conf` (0.4), `scripts/02_deploy_config.sh` (0.5). Còn lại: **chạy trên VM thật** và tick bàn giao.
+- **TV3:** `backend/app.py` (task 2.1) → còn 2.2 (cert), 2.3 (proxy), 2.4 (test).
+- **TV5:** bộ `docs/*` nền → còn `report.md`, log, ảnh.
+
+> Chứng thực: `nginx.conf` + `02_deploy_config.sh` đã kiểm tra bằng `nginx -t` trên Ubuntu 22.04 / nginx 1.18; deploy idempotent.

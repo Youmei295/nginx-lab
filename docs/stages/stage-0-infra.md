@@ -243,4 +243,4 @@ Nhóm chọn **demo và chụp ảnh ngay trên VM** để giữ đúng spec **1
   [Stage 2 — Reverse Proxy & HTTPS](./stage-2-reverse-proxy.md), [Stage 3 — Rate Limiting](./stage-3-rate-limit.md).
 - `log_format main_ext` ở đây là dữ liệu đầu vào cho [Stage 4 — Troubleshooting](./stage-4-troubleshooting.md)
   và [Stage 5 — Log & Báo cáo](./stage-5-logs-report.md).
-- Sơ đồ phụ thuộc đầy đủ: [`../timeline.md`](../timeline.md).
+- Sơ đồ phụ thuộc đầy đủ: [`../tasks.md`](../tasks.md) (mục *"Sơ đồ làm việc & Timeline"*).
