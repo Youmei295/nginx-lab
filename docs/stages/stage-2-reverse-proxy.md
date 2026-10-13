@@ -214,3 +214,5 @@ bash tests/test_https_proxy.sh
 | 2026-10-13 18:26 | Bước 3 | `nginx/conf.d/02_reverse_proxy.conf` | Cấu hình Virtual Host `app.local` (Port 80 redirect 301, Port 443 SSL termination, proxy_pass, custom 50x) | Hoàn tất file cấu hình |
 | 2026-10-13 18:28 | Bước 4 | `tests/test_https_proxy.sh` | Viết script kiểm thử tự động 5 test cases (301, 200, backend body, proxy headers) | `bash -n` syntax OK, chmod +x |
 | 2026-10-13 18:33 | Tổng hợp | `docs/stages/stage-2-reverse-proxy.md` | Hoàn thiện tài liệu kỹ thuật chi tiết, giải thích directive và hướng dẫn kiểm thử | Hoàn thành toàn bộ mã nguồn của Demo 2 (TV3) |
+| 2026-10-13 19:33 | Nghiệm thu VM | `docs/screenshots/demo2_https.png` | Triển khai live trên VM Ubuntu 22.04 (`192.168.122.42`), chạy test suite và chụp ảnh minh chứng bằng `wkhtmltoimage` | `nginx -t` test is successful; `test_https_proxy.sh` đạt 7 PASS, 0 FAIL; sinh ảnh `demo2_https.png` chuẩn xác |
+
