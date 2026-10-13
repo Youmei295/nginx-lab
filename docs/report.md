@@ -28,11 +28,10 @@
 - **Liên hệ demo:** `worker_connections` trong `nginx/nginx.conf`.
 
 ### A.3. Cơ chế Server Block (Virtual Host)
-*(Phụ trách: TV2)*
 
-- **TODO:** Nginx chọn server block theo `listen` (IP:port) rồi `server_name` (so khớp header `Host`).
-- **TODO:** Thứ tự ưu tiên: exact → wildcard → regex → default server.
-- **Liên hệ demo:** `site1.local` và `site2.local` cùng IP, khác `root`.
+- **Cơ chế chọn Server Block:** Nginx quyết định phân phối request đến Server Block nào bằng cách kiểm tra trước cổng `listen` (IP và Port). Nếu có nhiều block cùng chung IP:Port, Nginx sẽ tiếp tục kiểm tra chỉ thị `server_name` trong file cấu hình xem có khớp với giá trị của trường `Host` nằm trong HTTP Header của request gửi tới hay không.
+- **Thứ tự ưu tiên so khớp:** Nginx ưu tiên so khớp theo thứ tự: Tên miền chính xác (exact match) → Tên miền có dấu sao (wildcard) ở đầu → Tên miền có dấu sao (wildcard) ở cuối → Biểu thức chính quy (regular expressions). Nếu không có tên miền nào khớp, Nginx sẽ đẩy request về `default_server` (máy chủ mặc định).
+- **Liên hệ demo:** Trong bài thực hành, cả hai tên miền `site1.local` và `site2.local` đều phân giải về cùng một địa chỉ IP nội bộ (`127.0.0.1`) và cùng lắng nghe trên cổng 80. Nhờ cơ chế Virtual Host, Nginx đã đọc được Header `Host` để điều hướng chính xác request lấy nội dung từ các thư mục `root` khác nhau là `/usr/share/nginx/html/site1` và `/usr/share/nginx/html/site2`.
 
 ### A.4. access.log / error.log và phân biệt 502, 503, 504
 *(Phụ trách: TV4–TV5)*
@@ -56,8 +55,12 @@
   curl -H "Host: site1.local" http://127.0.0.1/
   curl -H "Host: site2.local" http://127.0.0.1/
   ```
-- **Kết quả:** _TODO: dán output_
-- **Ảnh:** _TODO: `docs/screenshots/demo1_*.png`_
+- **Kết quả:** 
+  - Lệnh 1 trả về: `<h1>Day la Site 1 - Thanh vien 2</h1>`
+  - Lệnh 2 trả về: `<h1>Day la Site 2 - Thanh vien 2</h1>`
+- **Ảnh:** 
+  ![Site 1](./screenshots/demo1_site1.png)
+  ![Site 2](./screenshots/demo1_site2.png)
 
 ### B.2. Demo 2 — Reverse Proxy & HTTPS
 - **Lệnh:**
