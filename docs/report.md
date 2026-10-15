@@ -176,7 +176,8 @@ Kết quả kiểm thử: 7 PASS, 0 FAIL
   ```
 
 - **Ảnh:**  
-  ![Demo 3 Benchmark](screenshots/demo3_benchmark.png)
+  ![Demo 3 Benchmark](screenshots/demo3_benchmark.png)  
+  *Kết quả `scripts/03_run_benchmark.sh`: 100 request đồng thời tới `limit.local`, 21 thành công (200) và 79 bị rate limit chặn (503).*
 
 
 ### B.4. Demo 4 — Troubleshooting backend down
