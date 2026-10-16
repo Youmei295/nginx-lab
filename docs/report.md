@@ -157,11 +157,28 @@ Kết quả kiểm thử: 7 PASS, 0 FAIL
 
 
 ### B.3. Demo 3 — Rate Limiting & Benchmark
-- **Lệnh:** `bash scripts/03_run_benchmark.sh`
-- **Kết quả `ab`:** _TODO: `Complete requests`, `Non-2xx responses`, `Requests per second`_
-- **Thống kê:** 200 ≈ _21_, 503 ≈ _79_
-- **Log:** `docs/logs/rate_limit_503.log`
-- **Ảnh:** _TODO: `docs/screenshots/demo3_*.png`_
+*(Phụ trách: TV4)*
+
+- **Cấu hình** (`nginx/conf.d/03_rate_limit.conf`): vhost `limit.local` (HTTP:80), giới hạn theo IP client với `rate=10r/s`, `burst=20`, `nodelay`.
+  ```nginx
+  limit_req_zone $binary_remote_addr zone=perip:10m rate=10r/s;
+  limit_req zone=perip burst=20 nodelay;
+  ```
+
+- **Lệnh:** `sudo bash scripts/03_run_benchmark.sh` (chạy `ab -n 100 -c 100 http://limit.local/`).  
+- **Kết quả `ab`:** `Complete requests: 100`, `Non-2xx responses: 79`, `Requests per second: 7633.01`.  
+- **Thống kê:** 200 = **21**, 503 = **79**. Request đầu tiên đi qua cộng 20 request trong `burst` được xử lý ngay nhờ `nodelay` (1 + 20 = 21); phần còn lại vượt burst nên bị trả 503.  
+  > `Failed requests: 79` của `ab` chỉ là do body trang 503 ngắn hơn trang 200 (lệch `Length`), không phải lỗi kết nối.
+- **Log** (`docs/logs/rate_limit_503.log`):
+  ```
+  error.log:  [error] ... limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local ...
+  access.log: 127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+  ```
+
+- **Ảnh:**  
+  ![Demo 3 Benchmark](screenshots/demo3_benchmark.png)  
+  *Kết quả `scripts/03_run_benchmark.sh`: 100 request đồng thời tới `limit.local`, 21 thành công (200) và 79 bị rate limit chặn (503).*
+
 
 ### B.4. Demo 4 — Troubleshooting backend down
 - **Lệnh:** `bash tests/test_troubleshooting.sh`

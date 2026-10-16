@@ -1,0 +1,30 @@
+# Rate limit evidence — 2026-10-15 08:10:59
+# Lệnh: ab -n 100 -c 100 http://limit.local/
+
+## error.log — dòng 'limiting requests' (10 dòng đầu trong 79 dòng của lần chạy này)
+2026/10/15 08:05:46 [error] 711#711: *59 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+2026/10/15 08:05:46 [error] 711#711: *60 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+2026/10/15 08:05:46 [error] 711#711: *61 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+2026/10/15 08:05:46 [error] 711#711: *62 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+2026/10/15 08:05:46 [error] 711#711: *63 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+2026/10/15 08:05:46 [error] 711#711: *64 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+2026/10/15 08:05:46 [error] 711#711: *65 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+2026/10/15 08:05:46 [error] 711#711: *66 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+2026/10/15 08:05:46 [error] 711#711: *67 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+2026/10/15 08:05:46 [error] 711#711: *68 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+
+## access.log — dòng status 503 (10 dòng đầu)
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+
+## Tổng hợp status của 100 request gần nhất
+HTTP 200: 21
+HTTP 503: 79
