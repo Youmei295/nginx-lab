@@ -164,7 +164,14 @@ Log minh chứng ([`rate_limit_503.log`](../logs/rate_limit_503.log)):
 - `503 206`: body trang 503 dài 206 byte; `urt=-` vì request bị chặn ngay tại Nginx, không có upstream.
 - Kiểm tra chéo: 21 × 612 + 79 × 206 = 29126 byte, đúng bằng `HTML transferred` của `ab`.
 
-> **Chưa có output ghi lại:** kết quả chạy `tests/test_rate_limit.sh` chưa được lưu vào tài liệu này. Khi chạy, dán output thật vào đây, hoặc ghi "chưa chạy".
+> **Kết quả chạy `tests/test_rate_limit.sh`**:
+== Test 1: tải thấp (1 request) phải trả 200 ==
+[PASS] Tải thấp trả 200
+== Test 2: 60 request liên tiếp phải có 503 ==
+   200: 24   503: 36
+[PASS] Có 36 request bị chặn 503
+[PASS] Có 24 request thành công (burst cho phép)
+exit code: 0
 
 ## 7. Lỗi thường gặp
 
