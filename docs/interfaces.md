@@ -7,6 +7,15 @@
 
 ---
 
+## 0. Môi trường VM theo thống nhất nhóm
+
+| Hạng mục | Giá trị nhóm sử dụng |
+|----------|---------------------|
+| Số VM | 1 VM Ubuntu Server 22.04 LTS |
+| RAM | **4096 MB (4 GB)** |
+
+Tuân xác nhận ngày **19/10/2026** rằng nhóm thống nhất dùng cấu hình RAM này. Đề tài gốc ghi 512 MB; đây là thông tin của đề gốc, còn cấu hình chạy và đánh giá demo của nhóm áp dụng **4096 MB** theo xác nhận trên. Không yêu cầu giảm RAM hoặc chạy lại Demo 4 ở 512 MB.
+
 ## 1. Tên miền & cổng (dùng chung 1 IP `127.0.0.1`)
 
 | Domain | Cổng | Giao thức | Phục vụ | Demo |
@@ -113,7 +122,7 @@ curl -k https://app.local/     # sau khi tắt backend
 ## 8. Log
 
 - `access.log`: `/var/log/nginx/access.log` — cần chứa `$request_time`, `$upstream_response_time` (cấu hình ở `nginx.conf`, Task 0.4).
-- `error.log`: `/var/log/nginx/error.log` — chứa `limiting requests` (503) và `connect() failed ... Connection refused` (502).
+- `error.log`: `/var/log/nginx/error.log` — chứa `limiting requests` (503) và `connect() failed (111: ...)` (502). VM của Tuân ghi `111: Unknown error`; giữ nguyên mô tả lỗi từ log nguồn, không bắt buộc chuỗi `Connection refused`.
 - `scripts/04_collect_logs.sh` trích về `docs/logs/`.
 - ⚠️ Không đặt `access_log` riêng trong `conf.d` nếu muốn giữ `main_ext`; nếu buộc phải đặt, ghi rõ format: `access_log /var/log/nginx/<file>.log main_ext;`.
 

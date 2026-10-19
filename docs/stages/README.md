@@ -26,8 +26,8 @@
 | 1 — Virtual Host | [`stage-1-vhost.md`](./stage-1-vhost.md) | ⬜ chưa viết |
 | 2 — Reverse Proxy & HTTPS | [`stage-2-reverse-proxy.md`](./stage-2-reverse-proxy.md) | ⬜ chưa viết |
 | 3 — Rate Limiting & Benchmark | [`stage-3-rate-limit.md`](./stage-3-rate-limit.md) | ⬜ chưa viết |
-| 4 — Troubleshooting | [`stage-4-troubleshooting.md`](./stage-4-troubleshooting.md) | ⬜ chưa viết |
-| 5 — Log & Báo cáo | [`stage-5-logs-report.md`](./stage-5-logs-report.md) | ⬜ chưa viết |
+| 4 — Troubleshooting | [`stage-4-troubleshooting.md`](./stage-4-troubleshooting.md) | Test chức năng đạt, đủ log/ảnh trên VM 4 GB theo quy định nhóm |
+| 5 — Log & Báo cáo | [`stage-5-logs-report.md`](./stage-5-logs-report.md) | Đã nhận minh chứng Demo 4; báo cáo/slide tổng thể cần nhóm tổng hợp |
 
 ## Liên hệ
 
