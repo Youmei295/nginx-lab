@@ -156,5 +156,5 @@ Tuân đã kiểm chứng chức năng và bàn giao minh chứng ngày 19/10/20
 - [ ] A.1 Vai trò Web Server / Reverse Proxy + lý do không expose backend.
 - [ ] A.2 Event-driven Nginx vs Process/Thread Apache.
 - [ ] A.3 Cơ chế Server Block.
-- [ ] A.4 access.log/error.log + phân biệt 502/503/504.
+- [x] A.4 access.log/error.log + phân biệt 502/503/504: Tuân phụ trách; đã có bảng đọc log thật, đối chiếu 502/503 và lý thuyết 504 tại [`report.md`](./report.md), kèm [`hướng dẫn trình bày`](./a4-log-guide.md).
 - [ ] Slide thuyết trình; demo chạy live trên VM Ubuntu 22.04; có ảnh + log dự phòng.

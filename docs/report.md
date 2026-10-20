@@ -56,21 +56,104 @@ Trong kiến trúc sản xuất hiện đại, ứng dụng backend (Python, Nod
 - **Liên hệ demo:** Trong bài thực hành, cả hai tên miền `site1.local` và `site2.local` đều phân giải về cùng một địa chỉ IP nội bộ (`127.0.0.1`) và cùng lắng nghe trên cổng 80. Nhờ cơ chế Virtual Host, Nginx đã đọc được Header `Host` để điều hướng chính xác request lấy nội dung từ các thư mục `root` khác nhau là `/usr/share/nginx/html/site1` và `/usr/share/nginx/html/site2`.
 
 ### A.4. access.log / error.log và phân biệt 502, 503, 504
-*(Phần Demo 4 theo note nhóm: Tuân)*
+*(Phụ trách toàn bộ A.4 theo phân công nhóm: Tuân)*
 
-`/var/log/nginx/access.log` ghi kết quả từng request. Format `main_ext` trong repo gồm IP client, user, thời điểm, request, status, số byte, Referer, User-Agent, `rt=$request_time` và `urt=$upstream_response_time`. `rt` ghi thời gian xử lý request; `urt` ghi thời gian upstream. Dấu `-` là không có giá trị tương ứng. Format này không chứa Host, nên cần đối chiếu thêm error log và dấu nhận diện request.
+#### 1. Hai loại log dùng để làm gì?
 
-`/var/log/nginx/error.log` ghi thời điểm, mức độ, tiến trình và thông báo chẩn đoán; lỗi upstream thường kèm client, server, request, upstream. Cấu hình repo ghi từ mức `warn` trở lên, gồm `error`. Mã HTTP cần được đối chiếu trong access log, còn message trong error log giúp tìm nguyên nhân.
+| File trong VM Ubuntu | Nội dung | Câu hỏi trả lời được |
+|---------------------|----------|----------------------|
+| `/var/log/nginx/access.log` | Kết quả từng request được ghi theo format đã cấu hình | Client gửi gì, nhận mã HTTP nào, mất bao lâu? |
+| `/var/log/nginx/error.log` | Sự kiện và thông báo chẩn đoán của Nginx | Kết nối hoặc xử lý lỗi ở đâu, vì sao? |
 
-| Mã | Tên | Nguyên nhân thường gặp | Dấu hiệu cần đối chiếu |
-|----|-----|------------------------|-----------------------|
-| 502 | Bad Gateway | Không kết nối được upstream hoặc upstream phản hồi không hợp lệ | Trong Demo 4: `connect() failed (111: ...)` tới `127.0.0.1:3000` |
-| 503 | Service Unavailable | Dịch vụ từ chối phục vụ; trong Demo 3 là vượt rate limit | `limiting requests`, zone `perip` trên `limit.local` |
-| 504 | Gateway Timeout | Chờ upstream vượt thời gian cho phép | `upstream timed out` |
+Đường dẫn trên do [`nginx/nginx.conf`](../nginx/nginx.conf) của repo quy định. Nginx đang dùng `main_ext`: phần `combined` có thêm hai cột thời gian.
 
-Trang lỗi tùy chỉnh thay nội dung phản hồi; mã HTTP 502 vẫn được giữ khi backend dừng. Không suy ra nguyên nhân chỉ từ giao diện trang lỗi hoặc timing. Demo 4 kiểm tra 502; không ghi nhận đã tạo 504 nếu chưa thực hiện kịch bản timeout.
+```nginx
+log_format main_ext '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" "$http_user_agent" '
+                    'rt=$request_time urt=$upstream_response_time';
+```
 
-**Minh chứng:** log 503 hiện có ở `docs/logs/rate_limit_503.log`; log 502 thật đã nhận từ VM tại [`docs/logs/backend_down_502.log`](logs/backend_down_502.log). Collector dùng User-Agent `nginx-lab-demo4` cho access 502 và thông tin server/upstream trong error log để giảm lẫn request. VM của Tuân ghi `111: Unknown error`; mã 111 tương ứng `ECONNREFUSED` trong [định nghĩa errno của Linux](https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno.h). Bộ lọc đã được đổi để nhận mã lỗi này, không sửa nội dung log thành `Connection refused`.
+#### 2. Đọc một dòng access.log thật
+
+Dòng sau lấy nguyên từ [`backend_down_502.log`](logs/backend_down_502.log), do Tuân thu trên VM ngày 19/10/2026:
+
+```text
+127.0.0.1 - - [19/Oct/2026:11:19:11 +0000] "GET / HTTP/1.1" 502 3924 "-" "nginx-lab-demo4" rt=0.001 urt=0.004
+```
+
+| Trường | Giá trị trong dòng trên | Cách đọc |
+|--------|------------------------|----------|
+| `$remote_addr` | `127.0.0.1` | IP client; request được gửi ngay trong VM |
+| Dấu `-` cố định | Dấu `-` đầu tiên sau IP | Ký tự cố định của format, không phải một kết quả lỗi |
+| `$remote_user` | Dấu `-` thứ hai sau IP | Không có tên user xác thực để ghi |
+| `$time_local` | `19/Oct/2026:11:19:11 +0000` | Thời điểm theo máy chạy, múi giờ UTC trong dòng này |
+| `$request` | `GET / HTTP/1.1` | Method, đường dẫn và phiên bản HTTP |
+| `$status` | `502` | Mã HTTP Nginx trả cho client |
+| `$body_bytes_sent` | `3924` | Số byte body đã gửi, không gồm header |
+| `$http_referer` | `-` | Không có Referer |
+| `$http_user_agent` | `nginx-lab-demo4` | Dấu nhận diện request của bài test |
+| `rt=$request_time` | `0.001` | Thời gian request tại Nginx, tương đương 1 ms |
+| `urt=$upstream_response_time` | `0.004` | Giá trị thời gian phía upstream, tương đương 4 ms |
+
+Theo tài liệu Nginx, [`$request_time`](https://nginx.org/en/docs/http/ngx_http_log_module.html#log_format) được ghi bằng giây, độ phân giải mili giây, từ lúc nhận những byte đầu của request đến lúc ghi log sau khi gửi phản hồi. [`$upstream_response_time`](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#var_upstream_response_time) ghi thời gian nhận phản hồi phía upstream, cùng đơn vị; khi thử nhiều upstream có thể có nhiều giá trị.
+
+Không suy ra backend trả lời thành công chỉ vì `urt` có số. Dòng 502 này vẫn có `urt`, nhưng error log chứng minh kết nối thất bại. Giữ nguyên `rt=0.001 urt=0.004` của nguồn; không ép số cho khớp, không lấy `rt - urt` làm thời gian xử lý riêng của Nginx. `0.000` cũng không có nghĩa xử lý không tốn thời gian. Dấu `-` là thiếu giá trị, không phải số 0.
+
+#### 3. Đọc một dòng error.log thật
+
+Đối chiếu cùng mốc `11:19:11`, client và request ở trên:
+
+```text
+2026/10/19 11:19:11 [error] 3574#3574: *8 connect() failed (111: Unknown error) while connecting to upstream, client: 127.0.0.1, server: app.local, request: "GET / HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "app.local"
+```
+
+| Phần log | Ý nghĩa |
+|----------|---------|
+| `2026/10/19 11:19:11` | Thời điểm sự kiện |
+| `[error]` | Mức độ log, không phải mã HTTP |
+| `3574#3574` | PID và thread ID của Nginx |
+| `*8` | Số nhận diện connection; không phải số lượng request hay mã HTTP |
+| `connect() failed (111: Unknown error)` | Thao tác kết nối upstream thất bại, errno 111 |
+| `client: 127.0.0.1` | Client liên quan đến lỗi |
+| `server: app.local` | Server block xử lý request |
+| `request`, `upstream`, `host` | Request gây lỗi, địa chỉ backend và Host được gửi |
+
+Errno 111 là `ECONNREFUSED` trên Linux của lab, theo [định nghĩa errno của Linux](https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno.h). VM ghi chữ `Unknown error`; giữ nguyên chữ đó trong minh chứng. Khi backend đã dừng, kết hợp mã lỗi, upstream `127.0.0.1:3000` và access 502 cho thấy Nginx không kết nối được backend.
+
+Cấu hình `error_log /var/log/nginx/error.log warn;` ghi mức `warn` và các mức nghiêm trọng hơn, nên dòng `[error]` vẫn được ghi. Thứ tự tăng dần là `debug`, `info`, `notice`, `warn`, `error`, `crit`, `alert`, `emerg`. ([Nginx error_log](https://nginx.org/en/docs/ngx_core_module.html#error_log))
+
+#### 4. Phân biệt 502, 503 và 504
+
+| Mã | Tên | Ý nghĩa và nguyên nhân thường gặp | Dấu hiệu trong lab |
+|----|-----|---------------------------------|--------------------|
+| 502 | Bad Gateway | Gateway không nhận được phản hồi hợp lệ từ upstream; có thể do backend dừng, sai port hoặc lỗi giao tiếp | Demo 4: access 502, error `connect() failed (111: ...)` tới `127.0.0.1:3000` |
+| 503 | Service Unavailable | Dịch vụ tạm thời không phục vụ được; có thể do giới hạn tải, quá tải hoặc ứng dụng chủ động từ chối | Demo 3: access 503 và error `limiting requests` tại `limit.local`, zone `perip` |
+| 504 | Gateway Timeout | Gateway không nhận được phản hồi upstream kịp thời gian cho phép | Dấu hiệu cần tìm là `upstream timed out`; chưa có minh chứng chạy 504 trong repo |
+
+Ý nghĩa HTTP theo [RFC 9110, mục 15.6.3–15.6.5](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.3). Trong cấu hình lab, [`limit_req_status`](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status) giữ mặc định 503; `limit_conn` cũng có mã từ chối [mặc định 503](https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_status), nhưng Demo 3 dùng `limit_req`. Không coi mọi 503 là backend chết hoặc mọi 502 có cùng một nguyên nhân.
+
+Proxy hiện đặt `proxy_connect_timeout 5s`, `proxy_read_timeout 60s`, `proxy_send_timeout 60s`. Kết nối bị từ chối trong Demo 4 gây 502; backend chậm không đồng nghĩa luôn trả 504. Nếu Nginx chưa gửi header cho client và upstream không phản hồi kịp timeout, request có thể kết thúc bằng 504. Riêng [`proxy_read_timeout`](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout) giới hạn khoảng chờ giữa hai lần đọc liên tiếp, không phải tổng thời gian toàn request.
+
+Trang HTML tùy chỉnh dùng chung cho 502/503/504 nên phải xem status và error log để phân biệt; không đoán mã lỗi từ giao diện. Phần 504 ở đây là lý thuyết, không khẳng định đã chạy hay tạo log mẫu thay minh chứng.
+
+#### 5. Đối chiếu với log 503 đã có
+
+Hai dòng sau trích nguyên từ [`rate_limit_503.log`](logs/rate_limit_503.log), minh chứng Demo 3 ngày 15/10/2026:
+
+```text
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+2026/10/15 08:05:46 [error] 711#711: *59 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+```
+
+Client ApacheBench nhận 503; error cho biết rate limit đã từ chối tại zone `perip`. `urt=-` phù hợp với việc không có lần xử lý upstream để ghi thời gian; server này phục vụ nội dung tĩnh. `excess` là giá trị vượt ngưỡng của bộ giới hạn, không phải số giây hay tổng số request. File có các dòng trích mẫu và phần tổng hợp ghi 21 mã 200, 79 mã 503; không lấy số dòng trích để suy ra tổng số request. Đây là minh chứng đã lưu, không phải lần chạy mới cho A.4.
+
+#### 6. Trình tự đọc khi gặp lỗi
+
+1. Xem access log để xác định status, thời điểm, client, request và User-Agent.
+2. Đọc error log ở thời điểm tương ứng, kiểm tra `server`, `upstream` và message rồi đối chiếu cấu hình.
+3. Kết luận từ cả hai nguồn. `main_ext` hiện không ghi Host hay connection ID nên không gán chắc vhost từ một dòng access, hoặc ghép tùy ý mọi dòng error với mọi dòng access. File 502 gồm 2 dòng access và 3 dòng error được lọc theo tiêu chí khác nhau.
+
+Hướng dẫn đọc ngay trên Windows và dàn ý thuyết trình của Tuân: [`a4-log-guide.md`](a4-log-guide.md).
 
 ---
 
