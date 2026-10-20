@@ -13,7 +13,8 @@
 - Hyper-V / VirtualBox / VMware / UTM (macOS) chỉ là lớp host — tất cả chạy **cùng một image Ubuntu 22.04**.
 - **Tạo máy ảo là bước thủ công** (không nằm trong script). Script `00_setup_vm.sh` chạy **bên trong** Ubuntu.
 - WSL2 được chấp nhận để **test cá nhân**, cần cấu hình thêm (mục 3.5) và **không thay thế** VM khi trình diễn.
-- Khi ghép nhóm / trình diễn cuối: dùng **1 VM Ubuntu 22.04 chung** đúng yêu cầu "1 VM (512MB RAM)".
+- Khi ghép nhóm / trình diễn cuối: dùng **1 VM Ubuntu 22.04 chung, RAM 4096 MB (4 GB)** theo [thống nhất nhóm tại `interfaces.md` mục 0](./interfaces.md#0-môi-trường-vm-theo-thống-nhất-nhóm).
+- Đề tài gốc ghi 512 MB; cấu hình VM nhóm sử dụng là **4096 MB (4 GB)** theo xác nhận ngày 19/10/2026 trong tài liệu trên.
 
 ### Vì sao phải chuẩn hóa?
 
@@ -36,7 +37,7 @@
 
 | # | Việc | Lệnh chính | Bắt buộc cho | Mục |
 |---|------|-----------|--------------|-----|
-| 1 | Tạo VM Ubuntu 22.04 (512MB RAM) | theo host | Tất cả | 3 |
+| 1 | Tạo VM Ubuntu 22.04 (RAM 4096 MB / 4 GB) | theo host | Tất cả | 3 |
 | 2 | Cài `git`, đặt `user.name`/`user.email`, thêm SSH key | `git config --global ...` | Tất cả | 4.1 |
 | 3 | Clone repo, tạo nhánh `feat/tvX-...` | `git clone ...` | Tất cả | 4.2 |
 | 4 | Chạy script thiết lập (swap, hosts, tools, nginx) | `bash scripts/00_setup_vm.sh` | Tất cả | 5.1 |
@@ -57,7 +58,7 @@
 2. Tải ISO **Ubuntu Server 22.04** tại <https://ubuntu.com/download/server>.
 3. **Hyper-V Manager** → *New* → *Virtual Machine*:
    - Generation: **Gen 2**
-   - RAM: **512 MB** (thêm *Dynamic Memory* nếu muốn)
+   - RAM: **4096 MB (4 GB)**
    - Network: **Default Switch**
 4. Gắn ISO, cài Ubuntu (chọn OpenSSH server khi được hỏi).
 5. Sau khi cài, cấp IP bằng `ip a` và SSH vào để chạy script.
@@ -65,20 +66,20 @@
 ### 3.2. VirtualBox
 
 1. Tải ISO Ubuntu Server 22.04.
-2. New VM: Type Linux / Version **Ubuntu (64-bit)**, RAM **512 MB**, disk ~10GB.
+2. New VM: Type Linux / Version **Ubuntu (64-bit)**, RAM **4096 MB (4 GB)**, disk ~10GB.
 3. Cài đặt bình thường, bật **OpenSSH server**.
 4. (Tùy chọn) Network → **Bridged Adapter** để truy cập từ máy khác.
 
 ### 3.3. VMware Workstation / Fusion
 
-1. New VM → chọn ISO → **Ubuntu 64-bit**, RAM 512 MB.
+1. New VM → chọn ISO → **Ubuntu 64-bit**, RAM **4096 MB (4 GB)**.
 2. Bật OpenSSH trong lúc cài.
 3. Network: **NAT** hoặc **Bridged**.
 
 ### 3.4. UTM (macOS, Apple Silicon)
 
 1. UTM → *Create a New Virtual Machine* → **Virtualize** → Linux.
-2. Chọn ISO Ubuntu Server **arm64** 22.04, RAM 512 MB.
+2. Chọn ISO Ubuntu Server **arm64** 22.04, RAM **4096 MB (4 GB)**.
 3. Cài đặt, bật OpenSSH server.
 4. Network: **Shared Network** (mặc định) hoặc Bridged.
 
@@ -106,7 +107,7 @@ Thoát và restart WSL từ PowerShell:
 wsl --shutdown
 ```
 
-Cấu hình RAM/swap cho WSL2 — tạo `%USERPROFILE%\.wslconfig`:
+Ví dụ cấu hình RAM/swap cho WSL2 **test cá nhân** — tạo `%USERPROFILE%\.wslconfig` (VM trình diễn của nhóm vẫn dùng RAM **4096 MB / 4 GB**):
 
 ```ini
 [wsl2]
@@ -231,7 +232,7 @@ Lab yêu cầu **chụp hình trang lỗi trên trình duyệt** (Demo 4). Cách
 khi đó **không cần** sửa hosts trên máy host, **không cần** port-forward.
 
 - **Mạng VM:** dùng **NAT (mặc định)** là đủ. Trình duyệt trong VM truy cập `*.local` qua `/etc/hosts` nội bộ (mục 5.1).
-- **Trình duyệt:** cài headless browser để **giữ đúng 512MB RAM** (không cài desktop).
+- **Trình duyệt:** có thể dùng headless browser để chụp ảnh ngay trên VM **RAM 4096 MB (4 GB)** mà không cần cài desktop.
 
 ### 7.1. Cài browser headless
 
@@ -270,8 +271,8 @@ cp /tmp/demo*.png docs/screenshots/
 git add docs/screenshots/ && git commit -m "docs(demo): add screenshots"
 ```
 
-> **Ràng buộc:** headless giữ đúng **1 VM (512MB)**. Nếu chọn desktop GUI + browser tương tác để ảnh
-> trực quan hơn thì phải nâng RAM VM (~2GB) — ghi chú rõ trong báo cáo vì lệch spec.
+> **Cấu hình nhóm:** dùng **1 VM, RAM 4096 MB (4 GB)** theo [`interfaces.md` mục 0](./interfaces.md#0-môi-trường-vm-theo-thống-nhất-nhóm).
+> Có thể dùng headless hoặc desktop GUI + browser tương tác trên VM này.
 > Ảnh headless là minh chứng hợp lệ cho "chụp hình trên trình duyệt".
 
 ## 8. Chuẩn bị sửa & đẩy code
@@ -313,7 +314,7 @@ Sau đó mở **Pull Request** để nhóm review (xem [`collaboration.md`](./co
 | `fallocate: Operation not supported` | Filesystem không hỗ trợ | Script tự fallback `dd` |
 | Nginx không start | Port 80 bị chiếm | `sudo ss -ltnp \| grep :80` |
 | `nginx -t` fail | Vhost tham chiếu cert chưa sinh | Chạy `01_generate_ssl.sh` rồi deploy lại |
-| Hết RAM khi benchmark | VM 512MB | Thêm swap / tạm tăng RAM VM |
+| Hết RAM khi benchmark | VM chưa được cấp đủ RAM hoặc có tiến trình khác chiếm RAM | Kiểm tra VM được cấp **4096 MB (4 GB)**, swap 1GB và các tiến trình chiếm RAM |
 | `apt` báo lock | Tiến trình apt khác đang chạy | Đợi hoặc `sudo pkill apt` rồi chạy lại |
 | `git clone ... Permission denied (publickey)` | Chưa thêm SSH key | Dùng HTTPS, hoặc thêm key vào GitHub |
 | `Repository not found` | Sai URL hoặc chưa có quyền | Kiểm tra URL & quyền truy cập |

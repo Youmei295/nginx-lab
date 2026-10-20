@@ -56,16 +56,104 @@ Trong kiến trúc sản xuất hiện đại, ứng dụng backend (Python, Nod
 - **Liên hệ demo:** Trong bài thực hành, cả hai tên miền `site1.local` và `site2.local` đều phân giải về cùng một địa chỉ IP nội bộ (`127.0.0.1`) và cùng lắng nghe trên cổng 80. Nhờ cơ chế Virtual Host, Nginx đã đọc được Header `Host` để điều hướng chính xác request lấy nội dung từ các thư mục `root` khác nhau là `/usr/share/nginx/html/site1` và `/usr/share/nginx/html/site2`.
 
 ### A.4. access.log / error.log và phân biệt 502, 503, 504
-*(Phụ trách: TV4–TV5)*
+*(Phụ trách toàn bộ A.4 theo phân công nhóm: Tuân)*
 
-- **TODO:** Vị trí (`/var/log/nginx/`), cấu trúc `access.log` (combined + `$request_time`), cấu trúc `error.log` (mức độ, thời gian, message).
-- **TODO:** Bảng phân biệt:
-  | Mã | Tên | Nguyên nhân thường gặp | Dấu hiệu trong log |
-  |----|-----|------------------------|--------------------|
-  | 502 | Bad Gateway | Backend chết, sai port | `connect() failed ... Connection refused` |
-  | 503 | Service Unavailable | Rate limit, quá tải, `limit_conn` | `limiting requests` |
-  | 504 | Gateway Timeout | Backend xử lý quá lâu | `upstream timed out` |
-- **Liên hệ demo:** log 502 ở `docs/logs/backend_down_502.log`, log 503 ở `docs/logs/rate_limit_503.log`.
+#### 1. Hai loại log dùng để làm gì?
+
+| File trong VM Ubuntu | Nội dung | Câu hỏi trả lời được |
+|---------------------|----------|----------------------|
+| `/var/log/nginx/access.log` | Kết quả từng request được ghi theo format đã cấu hình | Client gửi gì, nhận mã HTTP nào, mất bao lâu? |
+| `/var/log/nginx/error.log` | Sự kiện và thông báo chẩn đoán của Nginx | Kết nối hoặc xử lý lỗi ở đâu, vì sao? |
+
+Đường dẫn trên do [`nginx/nginx.conf`](../nginx/nginx.conf) của repo quy định. Nginx đang dùng `main_ext`: phần `combined` có thêm hai cột thời gian.
+
+```nginx
+log_format main_ext '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" "$http_user_agent" '
+                    'rt=$request_time urt=$upstream_response_time';
+```
+
+#### 2. Đọc một dòng access.log thật
+
+Dòng sau lấy nguyên từ [`backend_down_502.log`](logs/backend_down_502.log), do Tuân thu trên VM ngày 19/10/2026:
+
+```text
+127.0.0.1 - - [19/Oct/2026:11:19:11 +0000] "GET / HTTP/1.1" 502 3924 "-" "nginx-lab-demo4" rt=0.001 urt=0.004
+```
+
+| Trường | Giá trị trong dòng trên | Cách đọc |
+|--------|------------------------|----------|
+| `$remote_addr` | `127.0.0.1` | IP client; request được gửi ngay trong VM |
+| Dấu `-` cố định | Dấu `-` đầu tiên sau IP | Ký tự cố định của format, không phải một kết quả lỗi |
+| `$remote_user` | Dấu `-` thứ hai sau IP | Không có tên user xác thực để ghi |
+| `$time_local` | `19/Oct/2026:11:19:11 +0000` | Thời điểm theo máy chạy, múi giờ UTC trong dòng này |
+| `$request` | `GET / HTTP/1.1` | Method, đường dẫn và phiên bản HTTP |
+| `$status` | `502` | Mã HTTP Nginx trả cho client |
+| `$body_bytes_sent` | `3924` | Số byte body đã gửi, không gồm header |
+| `$http_referer` | `-` | Không có Referer |
+| `$http_user_agent` | `nginx-lab-demo4` | Dấu nhận diện request của bài test |
+| `rt=$request_time` | `0.001` | Thời gian request tại Nginx, tương đương 1 ms |
+| `urt=$upstream_response_time` | `0.004` | Giá trị thời gian phía upstream, tương đương 4 ms |
+
+Theo tài liệu Nginx, [`$request_time`](https://nginx.org/en/docs/http/ngx_http_log_module.html#log_format) được ghi bằng giây, độ phân giải mili giây, từ lúc nhận những byte đầu của request đến lúc ghi log sau khi gửi phản hồi. [`$upstream_response_time`](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#var_upstream_response_time) ghi thời gian nhận phản hồi phía upstream, cùng đơn vị; khi thử nhiều upstream có thể có nhiều giá trị.
+
+Không suy ra backend trả lời thành công chỉ vì `urt` có số. Dòng 502 này vẫn có `urt`, nhưng error log chứng minh kết nối thất bại. Giữ nguyên `rt=0.001 urt=0.004` của nguồn; không ép số cho khớp, không lấy `rt - urt` làm thời gian xử lý riêng của Nginx. `0.000` cũng không có nghĩa xử lý không tốn thời gian. Dấu `-` là thiếu giá trị, không phải số 0.
+
+#### 3. Đọc một dòng error.log thật
+
+Đối chiếu cùng mốc `11:19:11`, client và request ở trên:
+
+```text
+2026/10/19 11:19:11 [error] 3574#3574: *8 connect() failed (111: Unknown error) while connecting to upstream, client: 127.0.0.1, server: app.local, request: "GET / HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "app.local"
+```
+
+| Phần log | Ý nghĩa |
+|----------|---------|
+| `2026/10/19 11:19:11` | Thời điểm sự kiện |
+| `[error]` | Mức độ log, không phải mã HTTP |
+| `3574#3574` | PID và thread ID của Nginx |
+| `*8` | Số nhận diện connection; không phải số lượng request hay mã HTTP |
+| `connect() failed (111: Unknown error)` | Thao tác kết nối upstream thất bại, errno 111 |
+| `client: 127.0.0.1` | Client liên quan đến lỗi |
+| `server: app.local` | Server block xử lý request |
+| `request`, `upstream`, `host` | Request gây lỗi, địa chỉ backend và Host được gửi |
+
+Errno 111 là `ECONNREFUSED` trên Linux của lab, theo [định nghĩa errno của Linux](https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno.h). VM ghi chữ `Unknown error`; giữ nguyên chữ đó trong minh chứng. Khi backend đã dừng, kết hợp mã lỗi, upstream `127.0.0.1:3000` và access 502 cho thấy Nginx không kết nối được backend.
+
+Cấu hình `error_log /var/log/nginx/error.log warn;` ghi mức `warn` và các mức nghiêm trọng hơn, nên dòng `[error]` vẫn được ghi. Thứ tự tăng dần là `debug`, `info`, `notice`, `warn`, `error`, `crit`, `alert`, `emerg`. ([Nginx error_log](https://nginx.org/en/docs/ngx_core_module.html#error_log))
+
+#### 4. Phân biệt 502, 503 và 504
+
+| Mã | Tên | Ý nghĩa và nguyên nhân thường gặp | Dấu hiệu trong lab |
+|----|-----|---------------------------------|--------------------|
+| 502 | Bad Gateway | Gateway không nhận được phản hồi hợp lệ từ upstream; có thể do backend dừng, sai port hoặc lỗi giao tiếp | Demo 4: access 502, error `connect() failed (111: ...)` tới `127.0.0.1:3000` |
+| 503 | Service Unavailable | Dịch vụ tạm thời không phục vụ được; có thể do giới hạn tải, quá tải hoặc ứng dụng chủ động từ chối | Demo 3: access 503 và error `limiting requests` tại `limit.local`, zone `perip` |
+| 504 | Gateway Timeout | Gateway không nhận được phản hồi upstream kịp thời gian cho phép | Dấu hiệu cần tìm là `upstream timed out`; chưa có minh chứng chạy 504 trong repo |
+
+Ý nghĩa HTTP theo [RFC 9110, mục 15.6.3–15.6.5](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.3). Trong cấu hình lab, [`limit_req_status`](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status) giữ mặc định 503; `limit_conn` cũng có mã từ chối [mặc định 503](https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_status), nhưng Demo 3 dùng `limit_req`. Không coi mọi 503 là backend chết hoặc mọi 502 có cùng một nguyên nhân.
+
+Proxy hiện đặt `proxy_connect_timeout 5s`, `proxy_read_timeout 60s`, `proxy_send_timeout 60s`. Kết nối bị từ chối trong Demo 4 gây 502; backend chậm không đồng nghĩa luôn trả 504. Nếu Nginx chưa gửi header cho client và upstream không phản hồi kịp timeout, request có thể kết thúc bằng 504. Riêng [`proxy_read_timeout`](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout) giới hạn khoảng chờ giữa hai lần đọc liên tiếp, không phải tổng thời gian toàn request.
+
+Trang HTML tùy chỉnh dùng chung cho 502/503/504 nên phải xem status và error log để phân biệt; không đoán mã lỗi từ giao diện. Phần 504 ở đây là lý thuyết, không khẳng định đã chạy hay tạo log mẫu thay minh chứng.
+
+#### 5. Đối chiếu với log 503 đã có
+
+Hai dòng sau trích nguyên từ [`rate_limit_503.log`](logs/rate_limit_503.log), minh chứng Demo 3 ngày 15/10/2026:
+
+```text
+127.0.0.1 - - [15/Oct/2026:08:05:46 +0000] "GET / HTTP/1.0" 503 206 "-" "ApacheBench/2.3" rt=0.000 urt=-
+2026/10/15 08:05:46 [error] 711#711: *59 limiting requests, excess: 20.880 by zone "perip", client: 127.0.0.1, server: limit.local, request: "GET / HTTP/1.0", host: "limit.local"
+```
+
+Client ApacheBench nhận 503; error cho biết rate limit đã từ chối tại zone `perip`. `urt=-` phù hợp với việc không có lần xử lý upstream để ghi thời gian; server này phục vụ nội dung tĩnh. `excess` là giá trị vượt ngưỡng của bộ giới hạn, không phải số giây hay tổng số request. File có các dòng trích mẫu và phần tổng hợp ghi 21 mã 200, 79 mã 503; không lấy số dòng trích để suy ra tổng số request. Đây là minh chứng đã lưu, không phải lần chạy mới cho A.4.
+
+#### 6. Trình tự đọc khi gặp lỗi
+
+1. Xem access log để xác định status, thời điểm, client, request và User-Agent.
+2. Đọc error log ở thời điểm tương ứng, kiểm tra `server`, `upstream` và message rồi đối chiếu cấu hình.
+3. Kết luận từ cả hai nguồn. `main_ext` hiện không ghi Host hay connection ID nên không gán chắc vhost từ một dòng access, hoặc ghép tùy ý mọi dòng error với mọi dòng access. File 502 gồm 2 dòng access và 3 dòng error được lọc theo tiêu chí khác nhau.
+
+Hướng dẫn đọc ngay trên Windows và dàn ý thuyết trình của Tuân: [`a4-log-guide.md`](a4-log-guide.md).
 
 ---
 
@@ -181,15 +269,39 @@ Kết quả kiểm thử: 7 PASS, 0 FAIL
 
 
 ### B.4. Demo 4 — Troubleshooting backend down
-- **Lệnh:** `bash tests/test_troubleshooting.sh`
-- **Kết quả:** _TODO: 502 + trang lỗi tùy chỉnh_
-- **Log:** `docs/logs/backend_down_502.log`
-- **Ảnh:** _TODO: `docs/screenshots/demo4_error_page.png`_
+*(Phụ trách: Tuân; sử dụng backend/proxy Demo 2 của Tài)*
+
+- **Chuẩn bị:** deploy HTML mới, `sudo nginx -t`, cổng 3000 trống để test tự quản lý backend.
+- **Lệnh:** `bash tests/test_troubleshooting.sh --pause`.
+- **Kịch bản đã kiểm chứng chức năng:** backend chạy trả 200 → dừng backend trả 502 và đúng HTML tùy chỉnh → khởi động lại trả 200. Truy cập trực tiếp `/50x.html` trả 404 vì `internal`.
+- **Lấy log lúc test đang tạm dừng:** `sudo bash scripts/04_collect_logs.sh --demo 4`.
+- **Log đã nhận:** [`docs/logs/backend_down_502.log`](logs/backend_down_502.log), có 2 access 502 của User-Agent `nginx-lab-demo4` và 3 lỗi kết nối upstream; thời điểm collector thu thập `2026-10-19T12:34:51Z`. Giữ nguyên các dòng nguồn và mô tả `Unknown error`.
+- **Ảnh đã nhận và xem:** [`docs/screenshots/demo4_error_page.png`](screenshots/demo4_error_page.png), chụp qua HTTPS bằng `wkhtmltoimage` trong VM. Ảnh hiển thị đúng trang lỗi tùy chỉnh. Lệnh chụp báo exit 1 khi gặp HTTP 502 nhưng vẫn render file; đã kiểm tra nội dung ảnh thay vì chỉ dựa vào exit code.
+- **Kết quả thực tế do Tuân cung cấp ngày 19/10/2026:** deploy đã báo `syntax is ok`, `test is successful`; SAN có `app.local`, `localhost`, `127.0.0.1`. Test đã qua các bước trong bảng dưới và collector đã tạo file log thật.
+
+  | Bước | Kết quả thực tế |
+  |------|-----------------|
+  | Backend hoạt động | `[PASS] HTTPS trả 200 và đúng nội dung backend.` |
+  | Truy cập `/50x.html` trực tiếp | `[PASS] Không thể truy cập trực tiếp /50x.html (404).` |
+  | Backend dừng | `[PASS] Backend dừng: HTTPS trả 502 và đúng trang lỗi tùy chỉnh.` |
+  | Backend khôi phục | `[PASS] Sau phục hồi, HTTPS trả lại 200 và đúng nội dung backend.` |
+  | Kết thúc test | Backend do script tạo đã dừng, trả cổng 3000 về trạng thái ban đầu theo output test |
+
+- **Môi trường nhóm:** VirtualBox của Tuân cấp **4096 MB (4 GB) RAM**, đúng quy định nhóm được Tuân xác nhận ngày 19/10/2026 và ghi tại [`interfaces.md`, mục 0](interfaces.md#0-môi-trường-vm-theo-thống-nhất-nhóm). Đề gốc ghi 512 MB; nhóm dùng 4 GB cho demo, nên bộ kết quả hiện tại đáp ứng cấu hình đã thống nhất và không cần chạy lại ở 512 MB. Nhánh bàn giao Demo 4: `feat/tuan-troubleshooting`; review và merge theo quy trình nhóm.
+- **Dòng error log thật từ VM** (giữ nguyên timestamp theo máy chạy và chuỗi `Unknown error`):
+  ```text
+  2026/10/19 11:19:11 [error] 3574#3574: *8 connect() failed (111: Unknown error) while connecting to upstream, client: 127.0.0.1, server: app.local, request: "GET / HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "app.local"
+  ```
+- **Hướng dẫn chạy/chụp:** [`stages/stage-4-troubleshooting.md`](stages/stage-4-troubleshooting.md).
+
+![Demo 4 — Trang lỗi tùy chỉnh qua HTTPS khi backend dừng](screenshots/demo4_error_page.png)
 
 ---
 
 ## Phần C — Kết luận
 
+- **Lựa chọn triển khai Demo 4:** giữ nguyên backend Python và cấu hình proxy đã chốt; trang lỗi dùng HTML/CSS tự chứa. Test chỉ dừng tiến trình backend do nó tạo, có chế độ chờ lấy ảnh/log và dọn tiến trình khi kết thúc. Collector mặc định chỉ thu Demo 4, giữ minh chứng cũ khi không đủ log phù hợp.
+- **Quyết định hạ tầng ngày 19/10/2026:** Tuân xác nhận nhóm sử dụng **1 VM Ubuntu 22.04, RAM 4096 MB (4 GB)**. Áp dụng cấu hình này cho Demo 4 và giữ nguyên bộ kết quả đã thu; không giảm RAM về 512 MB của đề gốc.
 - **TODO:** Tổng kết đã làm được gì, hạn chế, hướng phát triển (load balancing, real cert Let's Encrypt, HTTP/2, caching).
 - **TODO:** Phân chia đóng góp (ai làm phần nào).
 

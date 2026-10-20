@@ -145,14 +145,16 @@ Quy ước giá trị (không tự bịa): xem [`interfaces.md`](./interfaces.md
 - [ ] Ảnh `docs/screenshots/demo3_benchmark.png`.
 
 ### Demo 4 — Troubleshooting
-- [ ] `tests/test_troubleshooting.sh` dừng backend → `curl -k https://app.local/` trả `502`.
-- [ ] Trang lỗi tùy chỉnh hiển thị (không phải trang mặc định).
-- [ ] `docs/logs/backend_down_502.log` (`connect() failed (111: Connection refused)`).
-- [ ] Ảnh `docs/screenshots/demo4_error_page.png`.
+- [x] `tests/test_troubleshooting.sh` dừng backend → `curl -k https://app.local/` trả `502`; phục hồi backend trả lại `200`.
+- [x] Trang lỗi tùy chỉnh hiển thị (không phải trang mặc định); `/50x.html` trực tiếp trả `404`.
+- [x] `docs/logs/backend_down_502.log` đã nhận từ VM; log thật ghi `connect() failed (111: Unknown error)`, giữ nguyên nội dung nguồn.
+- [x] Ảnh `docs/screenshots/demo4_error_page.png` đã nhận và mở xem đúng trang lỗi qua HTTPS.
+
+Tuân đã kiểm chứng chức năng và bàn giao minh chứng ngày 19/10/2026 trên VM **4096 MB (4 GB) RAM**, đúng cấu hình nhóm đã chốt tại [`interfaces.md`, mục 0](./interfaces.md#0-môi-trường-vm-theo-thống-nhất-nhóm). Không cần chạy lại ở 512 MB. Nhánh bàn giao: `feat/tuan-troubleshooting`, chờ review và merge theo quy trình nhóm; kết quả chi tiết ở [`report.md`, mục B.4](./report.md#b4-demo-4--troubleshooting-backend-down).
 
 ### Phần lý thuyết & trình bày
 - [ ] A.1 Vai trò Web Server / Reverse Proxy + lý do không expose backend.
 - [ ] A.2 Event-driven Nginx vs Process/Thread Apache.
 - [ ] A.3 Cơ chế Server Block.
-- [ ] A.4 access.log/error.log + phân biệt 502/503/504.
+- [x] A.4 access.log/error.log + phân biệt 502/503/504: Tuân phụ trách; đã có bảng đọc log thật, đối chiếu 502/503 và lý thuyết 504 tại [`report.md`](./report.md), kèm [`hướng dẫn trình bày`](./a4-log-guide.md).
 - [ ] Slide thuyết trình; demo chạy live trên VM Ubuntu 22.04; có ảnh + log dự phòng.
